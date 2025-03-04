@@ -3,6 +3,7 @@ import cors from "cors";
 import { PrismaClient } from "@prisma/client";
 import jwt from "jsonwebtoken";
 import auth from "./middleware.js";
+import { generateRoomID } from "./utility.js";
 
 const app = express();
 
@@ -21,7 +22,9 @@ app.post("/api/v1/signup", async (req, res) => {
         console.log("signnup end point hit")
         const { email, password } = req.body;
         if (!email || !password) {
-            return res.status(400).json({ message: "All fields are required" });
+            return res.json({ message: "All fields are required",
+                isSuccess : false
+             });
         }
         const founduser = await prisma.user.findUnique({
             where: {
@@ -29,7 +32,7 @@ app.post("/api/v1/signup", async (req, res) => {
             }
         });
         if (founduser) {
-            return res.status(400).json({ message: "User already exists" });
+            return res.json({ message: "User already exists" , isSuccess : false });
         }
         const user = await prisma.User.create({
             data: {
@@ -37,7 +40,7 @@ app.post("/api/v1/signup", async (req, res) => {
                 password
             }
         });
-        res.status(200).json({ message: "Signup successful" });
+        res.status(200).json({ message: "Signup successful" , isSuccess : true});
     } catch (error) {
         res.status(500).json({ message: "Signup failed" });
     }
@@ -46,7 +49,7 @@ app.post("/api/v1/signin", async (req, res) => {
     try {   
         const { email, password } = req.body;
         if (!email || !password) {
-            return res.status(400).json({ message: "All fields are required" });
+            return res.status(400).json({ message: "All fields are required",isSuccess : false });
         }
         const user = await prisma.user.findUnique({
             where: {
@@ -54,21 +57,30 @@ app.post("/api/v1/signin", async (req, res) => {
             }
         });
         if (!user) {
-            return res.status(400).json({ message: "User not found" });
+            return res.status(400).json({ message: "User not found",isSuccess : false });
         }
         if (user.password !== password) {
-            return res.status(400).json({ message: "Invalid password" });
+            return res.status(400).json({ message: "Invalid password" , isSuccess : false});
         }
         const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET);
-        res.status(200).json({ token: token });
+        res.status(200).json({ token: token , isSuccess : true});
     } catch (error) {
-        res.status(500).json({ message: "Signin failed" });
+        res.status(500).json({ message: "Signin failed",isSuccess : false });
     }
 });
 
-app.get("/api/v1/protected", auth , async (req, res) => {
+app.post("api/v1/createRoom",auth,(req,res)=>{
+    try{
+           const token =  generateRoomID()
+           console.log(token)
+    }catch(e){
+        res.json({message:"error happened"})
+    }
+})
+
+app.get("/api/v1/joinRoom", auth , async (req, res) => {
     const token = req.headers.authorization;
-    res.status(200).json({ message: "Protected route accessed" });
+    
 });
 
 app.listen(3000, () => {
