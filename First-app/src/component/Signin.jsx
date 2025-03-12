@@ -17,7 +17,7 @@ export default function Signin(){
         const response = await axios.post(`${BACKEND_URL}/api/v1/signin`, {email, password})
         console.log(response.data.token)
         window.localStorage.setItem("token", response.data.token);
-        return navigate("/joinRoom")
+        return navigate("/landing")
     }
     return (
         <div style={{backgroundColor:"grey", height:"100vh"}}>

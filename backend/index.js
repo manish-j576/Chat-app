@@ -69,19 +69,34 @@ app.post("/api/v1/signin", async (req, res) => {
     }
 });
 
-app.post("api/v1/createRoom",auth,(req,res)=>{
-    try{
-           const token =  generateRoomID()
-           console.log(token)
-    }catch(e){
-        res.json({message:"error happened"})
-    }
-})
 
-app.get("/api/v1/joinRoom", auth , async (req, res) => {
-    const token = req.headers.authorization;
+app.post("/api/v1/joinRoom", auth , async (req, res) => {
+    res.json({"message":"hi there from joinroom end point"})
+   
     
 });
+app.post("/api/v1/createRoom", auth , async (req, res) => {
+
+    console.log("createROom end point hitted")
+
+    try{
+        const roomID = generateRoomID()
+        console.log(roomID)
+        const room = await prisma.Room.create({
+            data:
+            {
+            roomId: roomID,
+            userId: req.userId
+        }})
+        res.json({"message":"Room id generated successfully",roomID})
+    }catch(e){
+        res.json({"message":"error occured"})
+    }
+   
+    
+});
+
+
 
 app.listen(3000, () => {
     console.log("Server is running on port 3000");
