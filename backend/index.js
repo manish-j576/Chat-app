@@ -1,8 +1,8 @@
 import express from "express";
 import cors from "cors";
-import { PrismaClient } from "@prisma/client";
 import jwt from "jsonwebtoken";
 import auth from "./middleware.js";
+import { PrismaClient } from "@prisma/client";
 import { generateRoomID } from "./utility.js";
 
 const app = express();
@@ -49,16 +49,20 @@ app.post("/api/v1/signin", async (req, res) => {
     try {   
         const { email, password } = req.body;
         if (!email || !password) {
+            console.log("control reach here 1st")
             return res.status(400).json({ message: "All fields are required",isSuccess : false });
         }
+        console.log("control reach here 2st")
         const user = await prisma.user.findUnique({
             where: {
                 email
             }
         });
+        console.log("control reach here 3st")
         if (!user) {
             return res.status(400).json({ message: "User not found",isSuccess : false });
         }
+        console.log("control reach here 4st")
         if (user.password !== password) {
             return res.status(400).json({ message: "Invalid password" , isSuccess : false});
         }
@@ -71,7 +75,25 @@ app.post("/api/v1/signin", async (req, res) => {
 
 
 app.post("/api/v1/joinRoom", auth , async (req, res) => {
-    res.json({"message":"hi there from joinroom end point"})
+    try{
+        const {roomId} = req.body
+        const foundRoom = await prisma.Room.findUnique({
+            where:{
+                roomId:roomId
+            }
+        })
+        if(!foundRoom){
+            res.json({
+                message:"no room found",
+                isSuccess:"false"
+            })
+        }
+        // WS connection with a room ID
+    }catch(e){
+        
+        res.status(500).json({ message: "Error occured",isSuccess : false });
+    }
+   
    
     
 });
@@ -82,12 +104,15 @@ app.post("/api/v1/createRoom", auth , async (req, res) => {
     try{
         const roomID = generateRoomID()
         console.log(roomID)
+        const {socket} = req.body
+        console.log(socket)
         const room = await prisma.Room.create({
             data:
             {
             roomId: roomID,
-            userId: req.userId
+            userId: req.userId,
         }})
+        
         res.json({"message":"Room id generated successfully",roomID})
     }catch(e){
         res.json({"message":"error occured"})
