@@ -1,50 +1,37 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
-
-const WS_URL=import.meta.env.WS_URL
+import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useWebSocket, WebSocketProvider } from "./WebSocketContext";
+const WS_URL=import.meta.env.VITE_WS_URL
 
 export default function CreateRoom() {
+       const navigate = useNavigate();
+        const ws = useWebSocket()
+        const inputRef = useRef();
 
-
-  const [roomID, setRoomId] = useState("");
-  const [socket , setSocket] = useState()
-  useEffect(() => {
-    async function fetchData() {
-      console.log("Fetch data");
-      const token = window.localStorage.getItem("token");
-      const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
-      const response = await axios.post(
-        `${BACKEND_URL}/api/v1/createRoom`,
-        {socket},
-        {
-          headers: {
-            Authorization: token,
-          },
-        }
-      );
-      console.log(response);
-      if (response.data && response.data.roomID) {
-        setRoomId(response.data.roomID);
-      } else {
-        console.error("roomID is missing in response");
+      if(!ws){
+        return ;
       }
-    }
-    fetchData();
-  }, []);
-
-  useEffect(()=>{
-    const ws = new WebSocket("ws://localhost:8080")
-    setSocket(ws)
-    ws.onmessage = (ev) =>{
-        console.log(ev.data)
-    }
-    ws.onclose = ()=>{
-      console.log("connection disconnected")
-    }
-    return () =>{
-      ws.close()
-    }
-  })
+      
+        ws.onmessage = (ev) =>{
+          const message = JSON.parse(ev.data)
+           console.log(message)
+           if(message.isSuccess == true && message.type === "socket_connection"){
+            console.log("Connected to websocket")
+            console.log(message.message)
+         }
+          else if(message.isSuccess == true && message.type === "room_connection"){
+            navigate("/chatroom");
+          }
+         
+        }
+      function onClickHandler(){
+        const roomName = (inputRef.current.value).toString()
+        const message = `{
+            "type":"join_room",
+            "roomId":"${roomName}"
+        }`
+        ws.send(message)
+      }
 
 
 
@@ -60,7 +47,25 @@ export default function CreateRoom() {
         Create Room
       </h1>
       <div style={{ display: "flex", justifyContent: "center", gap: "20px" }}>
-        Room Id : {roomID}
+      <div style={{ marginTop:"50px", width: "50%", display: "flex", gap: "2px" }}>
+            <input
+              ref={inputRef}
+              style={{ width: "85%", padding: "10px", borderRadius: "5px" }}
+              type="text"
+              placeholder="Enter Room Name"
+            />
+            <button
+              style={{
+                width: "15%",
+                padding: "10px",
+                borderRadius: "5px",
+                cursor: "pointer",
+              }}
+              onClick={onClickHandler}
+            >
+              Create Room
+            </button>
+          </div>
       </div>
     </div>
   );

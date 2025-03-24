@@ -7,8 +7,10 @@ import "./App.css"
 import JoinRoom from "./component/JoinRoom";
 import CreateRoom from "./component/CreateRoom";
 import Landing from "./component/Landing";
+import { WebSocketProvider } from "./component/WebSocketContext";
 function App() {
   return <>
+  <WebSocketProvider>
   <Router>
       <Routes>
         <Route path="/" element={<Home></Home>}></Route>
@@ -18,9 +20,10 @@ function App() {
         <Route path="/joinRoom" element={<JoinRoom></JoinRoom>}></Route>
         <Route path="/createRoom" element={<CreateRoom></CreateRoom>}></Route>
         <Route path="/landing" element={<Landing></Landing>}></Route>
+        
       </Routes>
   </Router>
-      
+  </WebSocketProvider>
     </>
   
 }
